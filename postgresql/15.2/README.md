@@ -10,9 +10,9 @@ makes configuration much easier
 
 ## Getting started
 
-1. Clone this repository `git clone https://github.com/loadrunit/vagrant-postgresql`
-2. Change into the `vagrant-postgresql/15.2` directory
-3. Download the installation zip file (`postgresql-15.2.tar.bz2`) from PostgreSQL official website into this directory - first time only:
+1. Clone this repository `git clone https://github.com/loadrunit/vagrant-projects`
+2. Change into the `vagrant-projects/postgresql/15.2` directory
+3. Download the source code zip file (`postgresql-15.2.tar.bz2`) from PostgreSQL official website into this directory - first time only:
 4. Run `vagrant up`
    1. The first time you run this it will provision everything and may take a while. Ensure you have a good internet connection as the scripts will update the VM to the latest via `yum`.
    2. The installation can be customized, if desired (see [Configuration](#configuration)).
@@ -23,9 +23,10 @@ makes configuration much easier
 
 The default database connection parameters are:
 
-* Hostname: `localhost`
-* Port: `5432`
-* database: `postgres`
+* Hostname      : `localhost`
+* Port          : `5432`
+* Database      : `postgres`
+* User          : `postgre`
 * Database passwords are the default one or auto-generated and printed on install
 
 These parameters can be customized, if desired (see [Configuration](#configuration)).

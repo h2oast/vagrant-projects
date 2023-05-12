@@ -34,7 +34,8 @@ yum install -y gcc      gcc-c++ gdb                                         \
                readline readline-devel                                      \
                libxml2  libxml2-devel                                       \
                openssl  openssl-devel                                       \
-               zlib     zlib-devel
+               zlib     zlib-devel                                          \
+               tmux     htop
 
 echo 'INSTALLER: PostgreSQL prerequisites complete'
 
