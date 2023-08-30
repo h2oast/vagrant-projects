@@ -1,0 +1,115 @@
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#
+# PostgreSQL provisioner
+#   The deployed cluster fo PostgreSQL settings:
+#     1) compile with CFLAGS="-O0 -g" to enable debug
+#     2) binaries are located at /opt/postgre/soft/$POSTGRE_VERSION
+#     3) data are located at /opt/postgre/data/$POSTGRE_VERSION
+#     4) systemd properly configured, so PostgreSQL would start as host start
+#
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+BOX_NAME = "generic/debian10"
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  # Use vagrant-env plugin if available
+  if Vagrant.has_plugin?("vagrant-env")
+    config.env.load(".env.local", ".env") # enable the plugin
+  end
+  # VM name
+  VM_NAME = default_s('VM_NAME', 'debian10-pg15.2')
+
+  # Memory for the VM (in MB, 2300 MB is ~2.25 GB)
+  VM_MEMORY = default_i('VM_MEMORY', 2300)
+
+  # VM time zone
+  # If not specified, will be set to match host time zone (if possible)
+  VM_SYSTEM_TIMEZONE = default_s('VM_SYSTEM_TIMEZONE', host_tz)
+
+  
+  VM_POSTGRE_USER  = default_s('VM_POSTGRE_USER',  'postgre')
+  
+  VM_POSTGRE_GROUP = default_s('VM_POSTGRE_GROUP', 'postgre')
+
+  # PostgreSQL base directory
+  VM_POSTGRE_BASE = default_s('VM_POSTGRE_BASE', '/opt/postgre')
+
+  # Database character set
+  VM_POSTGRE_CHARACTERSET = default_s('VM_POSTGRE_CHARACTERSET', 'UTF8')
+
+  # PostgreSQL Database edition
+  VM_POSTGRE_VERSION = default_s('VM_POSTGRE_VERSION', '15.2')
+
+  # PostgreSQL listener port
+  VM_POSTGRE_PORT = default_i('VM_POSTGRE_PORT', 5432)
+
+  # PostgreSQL Database password for superuser accounts
+  # If left blank, the password will be empty
+  VM_POSTGRE_PASSWORD = default_s('VM_POSTGRE_PASSWORD', '')
+end
+
+
+# Convenience methods
+def default_s(key, default)
+  ENV[key] && ! ENV[key].empty? ? ENV[key] : default
+end
+
+def default_i(key, default)
+  default_s(key, default).to_i
+end
+
+def host_tz
+  # get host time zone for setting VM time zone
+  # if host time zone isn't an integer hour offset from GMT, fall back to UTC
+  offset_sec = Time.now.gmt_offset
+  if (offset_sec % (60 * 60)) == 0
+    offset_hr = ((offset_sec / 60) / 60)
+    timezone_suffix = offset_hr >= 0 ? "-#{offset_hr.to_s}" : "+#{(-offset_hr).to_s}"
+    'Etc/GMT' + timezone_suffix
+  else
+    'UTC'
+  end
+end
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = BOX_NAME
+  config.vm.define VM_NAME
+
+  # Provider-specific configuration
+  config.vm.provider "virtualbox" do |v|
+    v.memory = VM_MEMORY
+    v.name   = VM_NAME
+  end
+
+  # VM hostname
+  config.vm.hostname = VM_NAME
+
+  # Guest IP address
+  config.vm.network "private_network", ip: "10.1.2.15"
+  # Host and guest share folder
+  config.vm.synced_folder ".", "/vagrant"
+  # Oracle port forwarding
+  config.vm.network "forwarded_port", guest: VM_POSTGRE_PORT, host: VM_POSTGRE_PORT
+  config.vm.network "forwarded_port", guest: 22,              host: 2215
+
+  # Provision everything on the first run  
+  config.vm.provision "shell", path: "scripts/provisioner.sh", env:
+    {
+       "SYSTEM_TIMEZONE"      => VM_SYSTEM_TIMEZONE,
+       "POSTGRE_BASE"         => VM_POSTGRE_BASE,
+       "POSTGRE_CHARACTERSET" => VM_POSTGRE_CHARACTERSET,
+       "POSTGRE_VERSION"      => VM_POSTGRE_VERSION,
+       "POSTGRE_PORT"         => VM_POSTGRE_PORT,
+       "POSTGRE_USER"         => VM_POSTGRE_USER,
+       "POSTGRE_GROUP"        => VM_POSTGRE_GROUP,
+       "POSTGRE_PASSWORD"     => VM_POSTGRE_PASSWORD
+    }
+end

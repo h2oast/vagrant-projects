@@ -1,0 +1,13 @@
+[Unit]
+Description=PostgreSQL
+Requires=network.target
+
+[Service]
+Type=forking
+Restart=no
+User=###POSTGRE_USER###
+ExecStart=###POSTGRE_HOME###/bin/pg_ctl start -D ###POSTGRE_DATA### -l ###POSTGRE_DATA###/start.log
+ExecStop=###POSTGRE_HOME###/bin/pg_ctl  stop  -D ###POSTGRE_DATA###
+
+[Install]
+WantedBy=multi-user.target
